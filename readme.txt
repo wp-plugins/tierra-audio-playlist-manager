@@ -1,0 +1,39 @@
+=== Tierra's Audio Playlist Manager ===
+Contributors: tierrainnovation
+Donate link: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
+Tags: audio player, playlist, media, podcast, podcasting, posts, player, audio
+Requires at least: 2.8.4
+Tested up to: 2.8.5
+Stable tag: trunk
+
+Tierra's Audio Playlist Manager offers extensive flexibility when embedding mp3 audio into your posts or templates.
+
+== Description ==
+
+Tierra's Audio Playlist Manager offers extensive flexibility when embedding mp3 audio into your posts or templates.  Features include:
+
+1. Embed single/multiple audio file(s) on a post page or template
+1. Embed single/multiple audio playlist(s) on a post page or template
+1. Build your own XSPF compatible player and link our XML to it
+
+We provide customizable short code that can be pasted into any page / post, as well as code to embed into your template.  For example code and samples, visit our **[Audio Playlist Manager](http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/)** page.
+
+== Changelog ==
+
+None At This Time
+
+== Installation ==
+
+1. Upload `tierra-audio-playlist-manager` to the `/wp-content/plugins/` directory
+1. Activate the plugin through the 'Plugins' menu in WordPress
+1. Select 'Audio Playlist Manager' from the 'Settings' menu and configure your options.
+
+You can additionally view our **[recorded screencast](http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/)** for further configuration options.
+
+== Screenshots ==
+
+**[View Screen Shots](http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/)**
+
+== Frequently Asked Questions ==
+
+We have developed an extensive **[FAQ List](http://tierra-innovation.com/wordpress-cms/faq/)** for all of our plugins.  Please check it for your question, and if you cannot locate a solution, feel free to **[contact us](http://tierra-innovation.com/wordpress-cms/support/)**.
