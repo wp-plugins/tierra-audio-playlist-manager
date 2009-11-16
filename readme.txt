@@ -20,7 +20,9 @@ We provide customizable short code that can be pasted into any page / post, as w
 
 == Changelog ==
 
-None At This Time
+= 1.0.3 =
+
+Fixed issue where users who were not administators could not access the plugin page.  You can now access if you are an Editor or Administrator.  If you are an Editor, you will see the link to the plugin page under the "Tools" menu.  If you are an "Administrator" you will see the link to the plugin page under both "Tools" and "Settings."  Also fixed an HTML bug on the edit asset screen.
 
 == Installation ==
 

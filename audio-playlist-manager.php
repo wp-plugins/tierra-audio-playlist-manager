@@ -3,7 +3,7 @@
  * Plugin Name: Tierra Audio Playlist Manager
  * Plugin URI: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
  * Description: Create, manage and embed MP3 playlists within the WordPress admin panel. Playlists can be embedded using the included swf player or played via third-party <a target="_blank" href="http://xspf.xiph.org/applications/">XSPF-compatible music players</a>.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Tierra Innovation
  * Author URI: http://www.tierra-innovation.com/
  */
@@ -193,7 +193,7 @@ ti_apm_test_for_activation();
 
 // set admin screen
 function ti_apm_modify_audio_menu() {
-		
+
 	add_options_page(
 		'Tierra Audio Playlist Manager', // page title
 		'Audio Playlist Manager', // sub-menu title
@@ -201,8 +201,14 @@ function ti_apm_modify_audio_menu() {
 		'audio-playlist-manager.php', // file
 		'ti_apm_admin_audio_options' // function
 	);
-
 	
+	add_management_page(
+		'Tierra Audio Playlist Manager', // page title
+		'Audio Playlist Manager', // sub-menu title
+		'upload_files', // access/capa
+		'audio-playlist-manager.php', // file
+		'ti_apm_admin_audio_options' // function
+	);
 }
 
 add_shortcode('ti_audio', 'ti_apm_print_player');
@@ -224,6 +230,7 @@ function ti_apm_admin_audio_options() {
 			case 'update'	:
 				if (isset($_GET['asset_id']))	{
 					ti_apm_update_existing_asset(intval($_GET['asset_id']));
+					ti_apm_print_audio_form();
 				}
 				break;
 
@@ -235,15 +242,14 @@ function ti_apm_admin_audio_options() {
 		}
 
 		
-	}
+	}	else{
 	
-	if ( isset($_FILES['file']))	{
-		ti_apm_upload_files();
-	}
-
+		if ( isset($_FILES['file']))	{
+			ti_apm_upload_files();
+		}
 	
-	ti_apm_print_audio_form();
-
+		ti_apm_print_audio_form();
+	}
 }
 
 
@@ -270,7 +276,6 @@ function ti_apm_return_tracks_in_playlist($tracks, $ti_apm_playlist_id)	{
 
 function ti_apm_check_permissions ($levelRequired =  TI_APM_LEVEL_REQUIRED , $str = 'You do not have permission to access this functionality.')	{
 	
-
 	global $userdata;
 
 	if (!(isset($userdata) && ($userdata->user_level >= $levelRequired ) &&   isset($userdata->user_login)))	{
@@ -725,6 +730,9 @@ function ti_apm_print_audio_form() {
 
 		</div>
 
+</div>
+</div>
+
 	";
 
 }
@@ -859,20 +867,14 @@ function ti_apm_edit_existing_asset ($asset_id)	{
 
 <p class="submit">
 <input type="submit" class="button-primary" name="save" value="Update Media" />
-<input type="hidden" name="post_id" id="post_id" value="$row->id" />
+<input type="hidden" name="post_id" id="post_id" value="$row->id" /></p>
 </form>
 </div>
-
 
 _END_OF_FORM
 ;
 	
-	
-	
-	
-	
-	exit();
-	
+
 }
 
 
