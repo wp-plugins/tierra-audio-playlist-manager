@@ -3,7 +3,7 @@
  * Plugin Name: Tierra Audio Playlist Manager
  * Plugin URI: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
  * Description: Create, manage and embed MP3 playlists within the WordPress admin panel. Playlists can be embedded using the included swf player or played via third-party <a target="_blank" href="http://xspf.xiph.org/applications/">XSPF-compatible music players</a>.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Tierra Innovation
  * Author URI: http://www.tierra-innovation.com/
  */
@@ -1048,12 +1048,12 @@ function ti_apm_print_player ($atts)	{
 	$playerURL = $player . '.swf';
 	
 	$acURL =  WP_PLUGIN_URL ."/tierra-audio-playlist-manager/js/AC_RunActiveContent.js";
-	$flashvars = "autoplay=" . urlencode($autoplay)
-				. "&autoload=" . urlencode($autoload)
-				. "&repeat_playlist=" . urlencode($repeat)
-				. "&player_title=" . urlencode($title)
-				. "&volume=" . urlencode($volume)
-				. "&playlist_url=" . urlencode($playlistURL);
+	$flashvars = ($autoplay ? "autoplay=" . urlencode($autoplay) : "")
+				. ($autoload ? "&autoload=" . urlencode($autoload) : "")
+				. ($repeat ? "&repeat_playlist=" . urlencode($repeat) : "")
+				. ($title ? "&player_title=" . urlencode($title) : "")
+				. ($volume ? "&volume=" . urlencode($volume) : "")
+				. ($playlistURL ? "&playlist_url=" . urlencode($playlistURL) : "");
 	
 	
 	$response=<<<__END_PLAYER_CODE__
