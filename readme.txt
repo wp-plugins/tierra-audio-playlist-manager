@@ -1,9 +1,9 @@
 === Tierra's Audio Playlist Manager ===
 Contributors: tierrainnovation
-Donate link: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
+Donate link: http://tierra-innovation.com/wordpress-cms/plugins/audio-playlist-manager/
 Tags: audio player, playlist, media, podcast, podcasting, posts, player, audio
 Requires at least: 2.8.4
-Tested up to: 2.8.5
+Tested up to: 2.9-beta-1
 Stable tag: trunk
 
 Tierra's Audio Playlist Manager offers extensive flexibility when embedding mp3 audio into your posts or templates.
@@ -16,9 +16,13 @@ Tierra's Audio Playlist Manager offers extensive flexibility when embedding mp3 
 1. Embed single/multiple audio playlist(s) on a post page or template
 1. Build your own XSPF compatible player and link our XML to it
 
-We provide customizable short code that can be pasted into any page / post, as well as code to embed into your template.  For example code and samples, visit our **[Audio Playlist Manager](http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/)** page.
+We provide customizable short code that can be pasted into any page / post, as well as code to embed into your template.  For example code and samples, visit our **[Audio Playlist Manager](http://tierra-innovation.com/wordpress-cms/plugins/audio-playlist-manager/)** page.
 
 == Changelog ==
+
+= 1.0.5 =
+
+Fixed the template embed code to render the player inside a theme.
 
 = 1.0.4 =
 
@@ -34,11 +38,11 @@ Fixed issue where users who were not administators could not access the plugin p
 1. Activate the plugin through the 'Plugins' menu in WordPress
 1. Select 'Audio Playlist Manager' from the 'Settings' menu and configure your options.
 
-You can additionally view our **[recorded screencast](http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/)** for further configuration options.
+You can additionally view our **[recorded screencast](http://tierra-innovation.com/wordpress-cms/plugins/audio-playlist-manager/)** for further configuration options.
 
 == Screenshots ==
 
-**[View Screen Shots](http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/)**
+**[View Screen Shots](http://tierra-innovation.com/wordpress-cms/plugins/audio-playlist-manager/)**
 
 == Frequently Asked Questions ==
 
