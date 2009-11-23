@@ -3,7 +3,7 @@
  * Plugin Name: Tierra Audio Playlist Manager
  * Plugin URI: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
  * Description: Create, manage and embed MP3 playlists within the WordPress admin panel. Playlists can be embedded using the included swf player or played via third-party <a target="_blank" href="http://xspf.xiph.org/applications/">XSPF-compatible music players</a>.
- * Version: 1.0.4
+ * Version: 1.0.6
  * Author: Tierra Innovation
  * Author URI: http://www.tierra-innovation.com/
  */
@@ -21,6 +21,11 @@
  * GPL2 License: http://www.tierra-innovation.com/license/GPL-LICENSE.txt
  */
 
+/*
+ Changes:
+ 1.03 - Added to Plugins menu, changed default permissions required
+ 1.04 - Changed embed code to increase compatibility with older XSPF players
+*/
 
 // This is the minimum level required to perform many of the functions within this plugin. Uploading still requires level 7
 define( 'TI_APM_LEVEL_REQUIRED', 4);
@@ -205,7 +210,7 @@ function ti_apm_modify_audio_menu() {
 	add_management_page(
 		'Tierra Audio Playlist Manager', // page title
 		'Audio Playlist Manager', // sub-menu title
-		'upload_files', // access/capa
+		'edit_others_posts', // access/capa
 		'audio-playlist-manager.php', // file
 		'ti_apm_admin_audio_options' // function
 	);
@@ -276,9 +281,9 @@ function ti_apm_return_tracks_in_playlist($tracks, $ti_apm_playlist_id)	{
 
 function ti_apm_check_permissions ($levelRequired =  TI_APM_LEVEL_REQUIRED , $str = 'You do not have permission to access this functionality.')	{
 	
-	global $userdata;
-
-	if (!(isset($userdata) && ($userdata->user_level >= $levelRequired ) &&   isset($userdata->user_login)))	{
+	global $userdata; 
+	
+	if (!current_user_can('edit_others_posts'))	{
 		echo("ACCESS ERROR: " . $str );
 		exit;
 	}
@@ -363,7 +368,7 @@ function ti_apm_create_new_playlist($title)	{
 
 function ti_apm_return_playlist_options($selectedTitle = null)	{
 	global $_audio_playlist_manager, $wpdb, $ti_apm_base_query;
-	$sql = "select id, title, description, tracks from $_audio_playlist_manager";	
+	$sql = "select id, title, description, tracks from $_audio_playlist_manager order by title";	
 	$rows = $wpdb->get_results($sql);
 	
 	$options="";
@@ -728,10 +733,7 @@ function ti_apm_print_audio_form() {
 
 			</form>
 
-		</div>
-
-</div>
-</div>
+		</div></div></div>
 
 	";
 
@@ -867,14 +869,16 @@ function ti_apm_edit_existing_asset ($asset_id)	{
 
 <p class="submit">
 <input type="submit" class="button-primary" name="save" value="Update Media" />
-<input type="hidden" name="post_id" id="post_id" value="$row->id" /></p>
+<input type="hidden" name="post_id" id="post_id" value="$row->id" />
 </form>
 </div>
+
 
 _END_OF_FORM
 ;
 	
 
+	
 }
 
 
@@ -1017,7 +1021,7 @@ function ti_apm_print_player ($atts)	{
 		"id" => 1,
 		"skin" => WP_PLUGIN_URL . "/tierra-audio-playlist-manager/swf/ti-player.swf",
 		"autoplay" => 0,
-		"autoload" => 1,
+		"autoload" => 0,
 		"volume" => 50,
 		"repeat" => 0,
 		"width" => 290,

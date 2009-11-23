@@ -20,6 +20,10 @@ We provide customizable short code that can be pasted into any page / post, as w
 
 == Changelog ==
 
+= 1.0.6 =
+
+Changed Roles & Capabilities user level code to check against edit_others_posts per some users permissions issues.
+
 = 1.0.5 =
 
 Fixed the template embed code to render the player inside a theme.
