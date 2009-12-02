@@ -20,6 +20,10 @@ We provide customizable short code that can be pasted into any page / post, as w
 
 == Changelog ==
 
+= 1.0.7 =
+
+Fixed glitches in Admin UI lightbox.  Updated ti-player.swf to better accomodate long album, artist and track names.  Removed visual glitch when ti-player.swf is launched without autoplay (Player would expand and shrink upon load).  Fixed error thrown when selecting tracks from right-click menu while player was paused
+
 = 1.0.6 =
 
 Changed Roles & Capabilities user level code to check against edit_others_posts per some users permissions issues.

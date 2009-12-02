@@ -66,9 +66,9 @@ if ($row->tracks)	{
 		<track>
 			<location>" .  htmlspecialchars($row->guid) ."</location>
 			
-			<creator>" .  htmlspecialchars($metadata['_ti_apm_artist']) ."</creator>
-			<album>" .  htmlspecialchars($metadata['_ti_apm_album']). "</album>
-			<title>" . htmlspecialchars($row->track) . "</title>
+			<creator>" . ( $metadata['_ti_apm_artist'] ? htmlspecialchars($metadata['_ti_apm_artist']) : "Unknown artist" ) ."</creator>
+			<album>" .  ( $metadata['_ti_apm_album'] ? htmlspecialchars($metadata['_ti_apm_album']) : "Unknown collection" ) . "</album>
+			<title>" . ( $row->track ? htmlspecialchars($row->track) : "No title" ). "</title>
 			<info>" .  htmlspecialchars($metadata['_ti_apm_info']) ."</info>
 			<trackNum>" . $wpdb->escape($metadata['_ti_apm_tracknum']) ."</trackNum>
 			<duration>" . $wpdb->escape($metadata['_ti_apm_duration']) ."</duration>

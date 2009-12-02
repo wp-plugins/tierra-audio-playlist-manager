@@ -3,7 +3,7 @@
  * Plugin Name: Tierra Audio Playlist Manager
  * Plugin URI: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
  * Description: Create, manage and embed MP3 playlists within the WordPress admin panel. Playlists can be embedded using the included swf player or played via third-party <a target="_blank" href="http://xspf.xiph.org/applications/">XSPF-compatible music players</a>.
- * Version: 1.0.6
+ * Version: 1.0.7
  * Author: Tierra Innovation
  * Author URI: http://www.tierra-innovation.com/
  */
@@ -20,12 +20,6 @@
  * MIT License: http://www.tierra-innovation.com/license/MIT-LICENSE.txt
  * GPL2 License: http://www.tierra-innovation.com/license/GPL-LICENSE.txt
  */
-
-/*
- Changes:
- 1.03 - Added to Plugins menu, changed default permissions required
- 1.04 - Changed embed code to increase compatibility with older XSPF players
-*/
 
 // This is the minimum level required to perform many of the functions within this plugin. Uploading still requires level 7
 define( 'TI_APM_LEVEL_REQUIRED', 4);
@@ -280,9 +274,7 @@ function ti_apm_return_tracks_in_playlist($tracks, $ti_apm_playlist_id)	{
 }
 
 function ti_apm_check_permissions ($levelRequired =  TI_APM_LEVEL_REQUIRED , $str = 'You do not have permission to access this functionality.')	{
-	
-	global $userdata; 
-	
+	global $userdata;
 	if (!current_user_can('edit_others_posts'))	{
 		echo("ACCESS ERROR: " . $str );
 		exit;
@@ -529,7 +521,7 @@ function ti_apm_print_javascript()	{
 			{ 	action:	'ti_apm_reorder_playlist' , tracks: str, ti_apm_playlist_id: jQuery('#playlist_selection').val() },
 			function(data)	{
 				jQuery('tbody#playlist')[0].innerHTML = data;
-				
+				tb_init('a.dynamicthickbox');
 			}
 		);	
 			
@@ -550,7 +542,7 @@ function ti_apm_print_javascript()	{
 			{ 	action:	'ti_apm_add_tracks_to_playlist' , tracks: str, ti_apm_playlist_id: jQuery('#playlist_selection').val() },
 			function(data)	{
 				jQuery('tbody#playlist')[0].innerHTML = data;
-				
+				tb_init('a.dynamicthickbox');
 			}
 		);
 		
@@ -570,7 +562,7 @@ function ti_apm_print_javascript()	{
 			{ 	action:	'ti_apm_remove_from_playlist' , tracks: str, ti_apm_playlist_id: jQuery('#playlist_selection').val() },
 			function(data)	{
 				jQuery('tbody#playlist')[0].innerHTML = data;
-				
+				tb_init('a.dynamicthickbox');
 			}
 		);
 		
