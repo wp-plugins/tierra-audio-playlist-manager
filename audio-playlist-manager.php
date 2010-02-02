@@ -24,7 +24,6 @@
 // This is the minimum level required to perform many of the functions within this plugin. Uploading still requires level 7
 define( 'TI_APM_LEVEL_REQUIRED', 4);
 
-	
 @ini_set('upload_max_size','100M');
 @ini_set('post_max_size','105M');
 @ini_set('max_execution_time','300');
@@ -606,11 +605,14 @@ function ti_apm_print_audio_form() {
 
 	$playlist_dropdown = ti_apm_list_playlists();
 
+	$plugin_name = 'audio-playlist-manager';
+	$plugin_version = '1.0.7';
+
 	// execute the form
 	print "
 	<div class='wrap'>
 
-		<div id='icon-options-general' class='icon32'><br /></div>
+		<div id='icon-options-general' class='icon32'><img src='http://tierra-innovation.com/wordpress-cms/logos/src/$plugin_name/$plugin_version/default.gif' alt='' title='' /><br /></div>
 
 		<h2>Tierra Audio Playlist Manager</h2>
 
