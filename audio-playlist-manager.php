@@ -605,14 +605,12 @@ function ti_apm_print_audio_form() {
 
 	$playlist_dropdown = ti_apm_list_playlists();
 
-	$plugin_name = 'audio-playlist-manager';
-	$plugin_version = '1.0.7';
 
 	// execute the form
 	print "
 	<div class='wrap'>
 
-		<div id='icon-options-general' class='icon32'><img src='http://tierra-innovation.com/wordpress-cms/logos/src/$plugin_name/$plugin_version/default.gif' alt='' title='' /><br /></div>
+		<div id='icon-options-general' class='icon32'><img src='http://tierra-innovation.com/wordpress-cms/logos/src/audio-playlist-manager/1.0.7/default.gif' alt='' title='' /><br /></div>
 
 		<h2>Tierra Audio Playlist Manager</h2>
 
