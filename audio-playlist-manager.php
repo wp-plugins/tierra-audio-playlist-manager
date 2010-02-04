@@ -3,7 +3,7 @@
  * Plugin Name: Tierra Audio Playlist Manager
  * Plugin URI: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
  * Description: Create, manage and embed MP3 playlists within the WordPress admin panel. Playlists can be embedded using the included swf player or played via third-party <a target="_blank" href="http://xspf.xiph.org/applications/">XSPF-compatible music players</a>.
- * Version: 1.0.7
+ * Version: 1.0.9
  * Author: Tierra Innovation
  * Author URI: http://www.tierra-innovation.com/
  */
@@ -21,9 +21,26 @@
  * GPL2 License: http://www.tierra-innovation.com/license/GPL-LICENSE.txt
  */
 
+/*
+
+Changes:
+ 1.0.9  - Fixed bug in admin playlist display reported to affect IE users
+ 1.0.8 	- Fixed bug in player that could lead to simultaneous sound playing
+		- Added logo to admin page.
+ 1.0.7 	- Fixed glitches in Admin UI lightbox
+		- Updated ti-player.swf to better accomodate long album, artist and track names
+		- Removed visual glitch when ti-player.swf is launched without autoplay (Player would expand and shrink upon load)
+		- Fixed error thrown when selecting tracks from right-click menu while player was paused
+ 1.0.6 	- Changed Roles & Capabilities user level code to check against edit_others_posts per some users permissions issues.
+ 1.0.5 	- Fixed the template embed code to render the player inside a theme.
+ 1.0.4 	- Changed embed code to increase compatibility with older XSPF players
+ 1.0.3 	- Added to Plugins menu, changed default permissions required
+*/
+
 // This is the minimum level required to perform many of the functions within this plugin. Uploading still requires level 7
 define( 'TI_APM_LEVEL_REQUIRED', 4);
 
+	
 @ini_set('upload_max_size','100M');
 @ini_set('post_max_size','105M');
 @ini_set('max_execution_time','300');
@@ -58,7 +75,7 @@ $ti_apm_prev_width = 400;
 
 
 // module globals
-$_audio_playlist_manager_db_version = 0.1;
+$_audio_playlist_manager_db_version = 1.09;
 
 // these need to be declared global so they are in scope for the activation hook
 global  $wpdb, $_audio_playlist_manager_db_version, $_audio_playlist_manager, $ti_apm_base_query, $userdata,  $ti_apm_prev_width, $ti_apm_prev_height;
@@ -194,7 +211,7 @@ function ti_apm_modify_audio_menu() {
 
 	add_options_page(
 		'Tierra Audio Playlist Manager', // page title
-		'Audio Playlist Manager', // sub-menu title
+		'Tierra Audio Playlists', // sub-menu title
 		'manage_options', // access/capa
 		'audio-playlist-manager.php', // file
 		'ti_apm_admin_audio_options' // function
@@ -202,7 +219,7 @@ function ti_apm_modify_audio_menu() {
 	
 	add_management_page(
 		'Tierra Audio Playlist Manager', // page title
-		'Audio Playlist Manager', // sub-menu title
+		'Tierra Audio Playlists', // sub-menu title
 		'edit_others_posts', // access/capa
 		'audio-playlist-manager.php', // file
 		'ti_apm_admin_audio_options' // function
@@ -412,6 +429,7 @@ function ti_apm_list_playlists()	{
 			<tbody id ="playlist">
 			<tr><td></td></tr></tbody>
 			</table>
+			<span id="idiotic_ie_workaround" name="idiotic_ie_workaround" ><table><tbody><tr>WHAT</tr></tbody></table></span>
 __END_OF_HEADER__
 ;
 $options .= "<br/><div><div class='alignleft'>
@@ -493,12 +511,29 @@ function ti_apm_print_javascript()	{
 					'?$ti_apm_base_query',
 					{ 	action:	'ti_apm_view_playlist', ti_apm_playlist_id: jQuery('#playlist_selection').val() },
 					function(data)	{
-						jQuery('tbody#playlist')[0].innerHTML = data;
-						tb_init('a.dynamicthickbox');
+						spoonFeedIE(data);
 					}
 		);
 		return false;
 	}
+
+
+	// The following function is to accommodate Microsoft Internet Explorer's absurd implementation of
+	// innerHTML, which does not work on tbody. Otherwise, a single jQuery line would suffice:
+	//
+	//		jQuery('tbody#playlist')[0].innerHTML = data;
+	//
+	// Instead, we end up with this extra function and a placeholder <span/> in the page. Nice, IE.
+	//
+	function spoonFeedIE (data)	{
+		var temp =jQuery('#idiotic_ie_workaround')[0];
+		temp.innerHTML =  '<table><tbody id="playlist">' + data + '</tbody></table>';
+		var tb = jQuery('tbody#playlist')[0];
+		tb.parentNode.replaceChild (temp.firstChild.firstChild, tb);
+		tb_init('a.dynamicthickbox');
+	}
+
+
 
 	// Used as a sort parameter to allow us to sort the tracks by value (allowing us to resort the tracks)
 	function compareSortProperty(a, b) {
@@ -519,8 +554,7 @@ function ti_apm_print_javascript()	{
 			'?$ti_apm_base_query',
 			{ 	action:	'ti_apm_reorder_playlist' , tracks: str, ti_apm_playlist_id: jQuery('#playlist_selection').val() },
 			function(data)	{
-				jQuery('tbody#playlist')[0].innerHTML = data;
-				tb_init('a.dynamicthickbox');
+				spoonFeedIE(data);
 			}
 		);	
 			
@@ -540,8 +574,7 @@ function ti_apm_print_javascript()	{
 			'?$ti_apm_base_query',
 			{ 	action:	'ti_apm_add_tracks_to_playlist' , tracks: str, ti_apm_playlist_id: jQuery('#playlist_selection').val() },
 			function(data)	{
-				jQuery('tbody#playlist')[0].innerHTML = data;
-				tb_init('a.dynamicthickbox');
+				spoonFeedIE(data);
 			}
 		);
 		
@@ -560,8 +593,7 @@ function ti_apm_print_javascript()	{
 			'?$ti_apm_base_query',
 			{ 	action:	'ti_apm_remove_from_playlist' , tracks: str, ti_apm_playlist_id: jQuery('#playlist_selection').val() },
 			function(data)	{
-				jQuery('tbody#playlist')[0].innerHTML = data;
-				tb_init('a.dynamicthickbox');
+				spoonFeedIE(data);
 			}
 		);
 		
@@ -599,20 +631,19 @@ function ti_apm_print_audio_form() {
 	ti_apm_check_permissions(TI_APM_LEVEL_REQUIRED, 'You do not have permission to access this page.');
 
 	
-	global $_audio_playlist_manager, $wpdb, $ti_apm_base_query, $ti_apm_prev_width, $ti_apm_prev_height;
+	global $_audio_playlist_manager, $_audio_playlist_manager_db_version, $wpdb, $ti_apm_base_query, $ti_apm_prev_width, $ti_apm_prev_height;
 
 
 
 	$playlist_dropdown = ti_apm_list_playlists();
 
-
 	// execute the form
 	print "
 	<div class='wrap'>
 
-		<div id='icon-options-general' class='icon32'><img src='http://tierra-innovation.com/wordpress-cms/logos/src/audio-playlist-manager/1.0.7/default.gif' alt='' title='' /><br /></div>
+		<div id='icon-options-general' class='icon32'><img src='http://tierra-innovation.com/wordpress-cms/logos/src/audio_playlist_manager/$_audio_playlist_manager_db_version/default.gif' alt='' title='' /><br /></div>
 
-		<h2>Tierra Audio Playlist Manager</h2>
+		<h2 style='height:64px;'>Tierra Audio Playlist Manager</h2>
 
 		<div>
 		<p>
@@ -797,7 +828,7 @@ function ti_apm_edit_existing_asset ($asset_id)	{
 	$album = htmlspecialchars(stripslashes($metadata[_ti_apm_album]));
 	$artist = htmlspecialchars(stripslashes($metadata[_ti_apm_artist]));
 	$caption = htmlspecialchars(stripslashes($row->post_content));
-	$description = stripslashes($row->post_excerpt);
+	$description = htmlspecialchars(stripslashes($row->post_excerpt));
 	
 	print<<<_END_OF_FORM
 	<div class="wrap">
