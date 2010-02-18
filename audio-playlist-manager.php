@@ -3,7 +3,7 @@
  * Plugin Name: Tierra Audio Playlist Manager
  * Plugin URI: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
  * Description: Create, manage and embed MP3 playlists within the WordPress admin panel. Playlists can be embedded using the included swf player or played via third-party <a target="_blank" href="http://xspf.xiph.org/applications/">XSPF-compatible music players</a>.
- * Version: 1.0.9
+ * Version: 1.1
  * Author: Tierra Innovation
  * Author URI: http://www.tierra-innovation.com/
  */
@@ -24,6 +24,10 @@
 /*
 
 Changes:
+ 1.1.0 	- Added "randomize" to playlist shortcode for default player
+		- Added loading indicator to default player
+		- Fixed bug in player causing multiple instances of track to play
+		- Changed preview to use text area for shortcode selection
  1.0.9  - Fixed bug in admin playlist display reported to affect IE users
  1.0.8 	- Fixed bug in player that could lead to simultaneous sound playing
 		- Added logo to admin page.
@@ -31,10 +35,10 @@ Changes:
 		- Updated ti-player.swf to better accomodate long album, artist and track names
 		- Removed visual glitch when ti-player.swf is launched without autoplay (Player would expand and shrink upon load)
 		- Fixed error thrown when selecting tracks from right-click menu while player was paused
- 1.0.6 	- Changed Roles & Capabilities user level code to check against edit_others_posts per some users permissions issues.
- 1.0.5 	- Fixed the template embed code to render the player inside a theme.
- 1.0.4 	- Changed embed code to increase compatibility with older XSPF players
- 1.0.3 	- Added to Plugins menu, changed default permissions required
+ 1.0.6 Ð Changed Roles & Capabilities user level code to check against edit_others_posts per some users permissions issues.
+ 1.0.5 Ð Fixed the template embed code to render the player inside a theme.
+ 1.0.4 - Changed embed code to increase compatibility with older XSPF players
+ 1.0.3 - Added to Plugins menu, changed default permissions required
 */
 
 // This is the minimum level required to perform many of the functions within this plugin. Uploading still requires level 7
@@ -70,12 +74,12 @@ if ( ! defined( 'WP_PLUGIN_URL' ) )
 
 // Height and width of the preview Thickbox
 $ti_apm_prev_height = 330;
-$ti_apm_prev_width = 400;
+$ti_apm_prev_width = 500;
 
 
 
 // module globals
-$_audio_playlist_manager_db_version = 1.09;
+$_audio_playlist_manager_db_version = 1.1;
 
 // these need to be declared global so they are in scope for the activation hook
 global  $wpdb, $_audio_playlist_manager_db_version, $_audio_playlist_manager, $ti_apm_base_query, $userdata,  $ti_apm_prev_width, $ti_apm_prev_height;
@@ -228,6 +232,9 @@ function ti_apm_modify_audio_menu() {
 
 add_shortcode('ti_audio', 'ti_apm_print_player');
 add_action('admin_menu', 'ti_apm_modify_audio_menu');
+
+add_action('the_excerpt_rss', array(&$this, 'ti_apm_remove_shortcode_from_rss'));
+add_action('the_content_rss', 'ti_apm_remove_shortcode_from_rss');
 
 function ti_apm_admin_audio_options() {
 
@@ -429,7 +436,7 @@ function ti_apm_list_playlists()	{
 			<tbody id ="playlist">
 			<tr><td></td></tr></tbody>
 			</table>
-			<span id="idiotic_ie_workaround" name="idiotic_ie_workaround" ><table><tbody><tr>WHAT</tr></tbody></table></span>
+			<span id="ie_workaround" name="ie_workaround" ><table><tbody><tr></tr></tbody></table></span>
 __END_OF_HEADER__
 ;
 $options .= "<br/><div><div class='alignleft'>
@@ -526,7 +533,7 @@ function ti_apm_print_javascript()	{
 	// Instead, we end up with this extra function and a placeholder <span/> in the page. Nice, IE.
 	//
 	function spoonFeedIE (data)	{
-		var temp =jQuery('#idiotic_ie_workaround')[0];
+		var temp =jQuery('#ie_workaround')[0];
 		temp.innerHTML =  '<table><tbody id="playlist">' + data + '</tbody></table>';
 		var tb = jQuery('tbody#playlist')[0];
 		tb.parentNode.replaceChild (temp.firstChild.firstChild, tb);
@@ -643,7 +650,7 @@ function ti_apm_print_audio_form() {
 
 		<div id='icon-options-general' class='icon32'><img src='http://tierra-innovation.com/wordpress-cms/logos/src/audio_playlist_manager/$_audio_playlist_manager_db_version/default.gif' alt='' title='' /><br /></div>
 
-		<h2 style='height:64px;'>Tierra Audio Playlist Manager</h2>
+		<h2 style='height:64px;'>Tierra Audio Playlist Manager $_audio_playlist_manager_db_version</h2>
 
 		<div>
 		<p>
@@ -1046,6 +1053,7 @@ function ti_apm_print_player ($atts)	{
 		"autoplay" => 0,
 		"autoload" => 0,
 		"volume" => 50,
+		'randomize' => 0,
 		"repeat" => 0,
 		"width" => 290,
 		"height" => 32,
@@ -1065,11 +1073,12 @@ function ti_apm_print_player ($atts)	{
 
 
 	$media_id = "" ? "" : intval($media);
-	
+	$randomize = "" ? "" : intval($randomize);
 
 	
 	
-	$playlistURL = WP_PLUGIN_URL . "/tierra-audio-playlist-manager/playlist.php?id=$ti_apm_playlist_id&media_id=$media_id";
+	$playlistURL = WP_PLUGIN_URL . "/tierra-audio-playlist-manager/playlist.php?id=$ti_apm_playlist_id&media_id=$media_id&random=$randomize";
+	
 	
 	$player =  preg_replace('/\.swf$/', '', $skin);
 	$playerURL = $player . '.swf';
@@ -1127,6 +1136,11 @@ __END_PLAYER_CODE__
 
 return $response;
 
+}
+
+
+function ti_apm_remove_shortcode_from_rss($content) {
+	return preg_replace("/\[TI_([^\]]*)\]/i", "", $content);
 }
 
 function ti_apm_file_upload_error_message($error_code) {

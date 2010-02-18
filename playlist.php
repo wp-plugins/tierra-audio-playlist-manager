@@ -15,6 +15,7 @@ global $wpdb, $_audio_playlist_manager_db_version, $_audio_playlist_manager, $ba
 $_audio_playlist_manager = $wpdb->prefix . "ti_audio_playlist_manager";
 
 $playlist_id = intval($_GET['id']);
+$randomize = isset($_GET['random']) ? intval($_GET['random']) : 0;
 
 $media_id = isset($_GET['media_id']) ? intval($_GET['media_id']) : -1;
 
@@ -37,6 +38,11 @@ $license = $row->license ? htmlentities($row->license) : '';
 
 $title = htmlentities(stripslashes($row->title));
 $tracks = split (',' , $row->tracks);
+
+if ($randomize > 0)	{
+	shuffle($tracks);
+}
+
 $i = 0;
 
 echo<<<__END_OF_HEADER__

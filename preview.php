@@ -36,12 +36,20 @@ echo<<<__END_OF_PREVIEW___
 		text-align:center;
 	}
 	.centerLine	{
-		width:290px;
+		width:340px;
 		margin:10px auto;
 	}
 	.floatRight	{
 		float:right;
 	}
+	
+	.embedCode {
+		height:75px;
+		width:340px;
+		margin:15px auto;
+		text-align:center;
+	}
+	
 	</style>
 
 	</head>
@@ -53,6 +61,7 @@ echo<<<__END_OF_PREVIEW___
 	<script language="javascript">
 	
 		var autoplayStatus = '';
+		var randomStatus = '';
 		var repeatStatus = '';
 		var volume = '';
 			
@@ -85,7 +94,7 @@ echo<<<__END_OF_PREVIEW___
 		
 		
 		function updateSnippet()	{
-			jQuery(".embedCode").html("$embedcode" + autoplayStatus +  repeatStatus + volume + "]");
+			jQuery(".embedCode").html("$embedcode" + autoplayStatus +  repeatStatus + randomStatus + volume + "]");
 			
 		}
 		
@@ -111,14 +120,25 @@ echo<<<__END_OF_PREVIEW___
 				 
 				updateSnippet();			
 			});
+	
+				
+			jQuery("input#chk_randomize").change(function()	{
+				 if(jQuery(this).attr('checked'))	{
+					randomStatus = ' randomize="1"';
+				 } else	{
+					randomStatus = '';
+				 }
+				 
+				updateSnippet();			
+			});
 			
 	
 			jQuery("input#volume_input").change(function()	{
 				// Volume must be between 0 and 100
 				var v = Math.min(100, Math.max(jQuery(this).val(), 0));
-				 if( jQuery(this).val() != 50)	{
-					volume = ' volume="' + v + '"';
-				 }
+				
+				volume = ' volume="' + v + '"';
+				 
 				 
 				updateSnippet();			
 			});
@@ -146,11 +166,12 @@ echo<<<__END_OF_PREVIEW___
 	<form id="option_form"  class="centerLine">
 		Begin playing automatically: <input class="floatRight" id="chk_auto" type="checkbox" value="on"/>
 		<br/>Repeat when playlist ends: <input class="floatRight" id="chk_repeat" type="checkbox" />
+		<br/>Create random order playlist: <input class="floatRight" id="chk_randomize" type="checkbox" />
 		<br/>Initial volume (0-100):<input class="floatRight" id="volume_input" type="text" size="3" value="50"/> 
 	</form>
 	
 	<p class="centerLine">The code used to embed this player in a post is as follows:</p>
-	<p><pre><div class="embedCode" style="text-align:center;">$embedcode]</div></pre></p>
+	<p class="centerLine"><textarea class="embedCode" >$embedcode]</textarea></p>
 	</body>
 	</html>
 
