@@ -3,7 +3,7 @@ Contributors: tierrainnovation
 Donate link: http://tierra-innovation.com/wordpress-cms/plugins/audio-playlist-manager/
 Tags: audio player, playlist, media, podcast, podcasting, posts, player, audio
 Requires at least: 2.8.4
-Tested up to: 3.0-alpha
+Tested up to: 3.0.1
 Stable tag: trunk
 
 Tierra's Audio Playlist Manager offers extensive flexibility when embedding mp3 audio into your posts or templates.
@@ -19,6 +19,14 @@ Tierra's Audio Playlist Manager offers extensive flexibility when embedding mp3 
 We provide customizable short code that can be pasted into any page / post, as well as code to embed into your template.  For example code and samples, visit our **[Audio Playlist Manager](http://tierra-innovation.com/wordpress-cms/plugins/audio-playlist-manager/)** page.
 
 == Changelog ==
+
+= 2.0 = 
+
+Added widget support
+Added notice on plugin page about max_file_size limitations
+Fixed loading bug upon activation in WP 3.0.1
+Fixed plugin to work correctly in WP 3.0.1
+Fixed rendering bug on file upload size limit (see add notice)
 
 = 1.1.0 = 
 

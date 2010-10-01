@@ -3,7 +3,7 @@
  * Plugin Name: Tierra Audio Playlist Manager
  * Plugin URI: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
  * Description: Create, manage and embed MP3 playlists within the WordPress admin panel. Playlists can be embedded using the included swf player or played via third-party <a target="_blank" href="http://xspf.xiph.org/applications/">XSPF-compatible music players</a>.
- * Version: 1.1
+ * Version: 2.0
  * Author: Tierra Innovation
  * Author URI: http://www.tierra-innovation.com/
  */
@@ -24,6 +24,10 @@
 /*
 
 Changes:
+ 2.0 	- Added widget support
+		- Fixed loading bug upon activation in WP 3.0.1
+		- Fixed plugin to work correctly in WP 3.0.1
+		- Fixed rendering bug on file upload if max_file_size is less than file attempted to upload
  1.1.0 	- Added "randomize" to playlist shortcode for default player
 		- Added loading indicator to default player
 		- Fixed bug in player causing multiple instances of track to play
@@ -35,8 +39,8 @@ Changes:
 		- Updated ti-player.swf to better accomodate long album, artist and track names
 		- Removed visual glitch when ti-player.swf is launched without autoplay (Player would expand and shrink upon load)
 		- Fixed error thrown when selecting tracks from right-click menu while player was paused
- 1.0.6 – Changed Roles & Capabilities user level code to check against edit_others_posts per some users permissions issues.
- 1.0.5 – Fixed the template embed code to render the player inside a theme.
+ 1.0.6 √ê Changed Roles & Capabilities user level code to check against edit_others_posts per some users permissions issues.
+ 1.0.5 √ê Fixed the template embed code to render the player inside a theme.
  1.0.4 - Changed embed code to increase compatibility with older XSPF players
  1.0.3 - Added to Plugins menu, changed default permissions required
 */
@@ -79,7 +83,7 @@ $ti_apm_prev_width = 500;
 
 
 // module globals
-$_audio_playlist_manager_db_version = 1.1;
+$_audio_playlist_manager_db_version = 2.0;
 
 // these need to be declared global so they are in scope for the activation hook
 global  $wpdb, $_audio_playlist_manager_db_version, $_audio_playlist_manager, $ti_apm_base_query, $userdata,  $ti_apm_prev_width, $ti_apm_prev_height;
@@ -193,7 +197,7 @@ function _ti_apm_install() {
 
 function ti_apm_test_for_activation() {
 	global $wpdb, $_audio_playlist_manager;
-	
+
 	$tables = array($_audio_playlist_manager);
 	
 	$ok = true;
@@ -204,8 +208,10 @@ function ti_apm_test_for_activation() {
 		}
 	}
 	
-	if (!$ok)
-		echo "<p><strong>Plugin Check:</strong> <span style='color: red;'>It looks like this plugin did not fully activate.  Please <a href='plugins.php'>click here</a> and toggle the plugin off and on to redo the activation.</span></p>";
+	// 3.0 will choke if we output anything before the activation is complete.
+	if (!$ok && get_bloginfo('version') < '3.0')	{
+		echo get_bloginfo('version') . "<p><strong>Plugin Check:</strong> <span style='color: red;'>It looks like this plugin did not fully activate.  Please <a href='plugins.php'>click here</a> and toggle the plugin off and on to redo the activation.</span></p>";
+	}
 }
 
 ti_apm_test_for_activation();
@@ -235,6 +241,108 @@ add_action('admin_menu', 'ti_apm_modify_audio_menu');
 
 add_action('the_excerpt_rss', array(&$this, 'ti_apm_remove_shortcode_from_rss'));
 add_action('the_content_rss', 'ti_apm_remove_shortcode_from_rss');
+
+
+register_sidebar_widget(__('Tierra Audio Playlist Player'), 'ti_apm_widget_output');
+register_widget_control(__('Tierra Audio Playlist Player'), 'ti_apm_widget_output_control', 250, 200 );
+
+function ti_apm_widget_output($args) {
+  extract($args);
+  $opts = get_option ("ti_apm_widget_settings");
+  echo $before_widget;
+  echo $before_title;
+  echo $opts['title'];
+  echo $after_title;
+ 
+	$array =  array(
+								name=>$opts['title'],
+								//id => intval($opts['id']),
+								height=>intval($opts['height']) >= 120 ? intval($opts['height'] ) : 32,
+								width=>	intval($opts['width']) >= 120 ? intval($opts['width'] ) : 160,
+								volume=> intval($opts['volume']) <= 100 ? intval($opts['volume']) : 100,
+								autoplay=> $opts['autoplay'],
+								repeat=> $opts['repeat'],
+								random=> $opts['random'],
+							);
+	if (strlen ($opts['skin']) > 4)	{
+		$array['skin'] = $opts['skin'];
+	}
+
+ 
+  echo ti_apm_print_player(	$array);
+  echo $after_widget;
+}
+	
+function ti_apm_widget_output_control() {
+	global $wpdb;
+	//update_option ("ti_apm_widget_settings", array('autoplay' => true, 'repeat'=>true, 'random' => true, title=> 'Test', id=>'200'));
+
+
+	if (intval( $_POST['ti_apm_widget_controller_submit'] ) == 1)	{
+		$ap = isset($_POST['ti_apm_autoplay_checkbox']) ? ti_apm_admin_booleanValue($_POST['ti_apm_autoplay_checkbox']) : false;
+		$repeat = isset($_POST['ti_apm_repeat_checkbox']) ? ti_apm_admin_booleanValue($_POST['ti_apm_repeat_checkbox']) : false;
+		$random = isset($_POST['ti_apm_random_checkbox']) ? ti_apm_admin_booleanValue($_POST['ti_apm_random_checkbox']) : false;
+		$title = $wpdb->escape($_POST['ti_apm_playlist_name']) ? $wpdb->escape($_POST['ti_apm_playlist_name']) : "Unknown";
+		$skin = $wpdb->escape($_POST['ti_apm_playlist_skin']) ? $wpdb->escape($_POST['ti_apm_playlist_skin']) : null;
+		//$id = intval($wpdb->escape($_POST['ti_apm_playlist_id'])) > 0 ? intval($wpdb->escape($_POST['ti_apm_playlist_id'])) : '';
+	
+		$volume = (intval($wpdb->escape($_POST['ti_apm_playlist_volume'])) <= 100) && (intval($wpdb->escape($_POST['ti_apm_playlist_volume'])) >= 0)? intval($wpdb->escape($_POST['ti_apm_playlist_volume'])) : 100;
+		$width = intval($wpdb->escape($_POST['ti_apm_playlist_width'])) >= 120 ? intval($wpdb->escape($_POST['ti_apm_playlist_width'])) : 160;
+		
+		$height = intval($wpdb->escape($_POST['ti_apm_playlist_height'])) >= 1 ? intval($wpdb->escape($_POST['ti_apm_playlist_height'])) : 32;
+	
+		$array =  array('autoplay' => $ap, 'repeat'=>$repeat, 'random' => $random, 'title'=> $title, 'id'=>$id, 'volume'=>$volume, 'width'=>$width, 'height'=>$height, 'skin'=>$skin);
+	
+		update_option ("ti_apm_widget_settings", $array);
+	}
+	$opts = get_option ("ti_apm_widget_settings");
+ 
+	$w = $opts['width'] ? $opts['width'] : 160;
+	$h = $opts['height'] ? $opts['height'] : 32;
+
+	$cb_auto = ($opts[autoplay] == true) ? "CHECKED" : "";
+	$cb_repeat = ($opts[repeat] == true) ? "CHECKED" : "";
+	$cb_random = ($opts[random] == true) ? "CHECKED" : "";
+  
+	 print <<<__END_OF_FORM__
+		<input type='hidden' id='ti_apm_widget_controller_submit' name='ti_apm_widget_controller_submit'  value='1'/>
+		<p>Playlist name <input type='text' id='ti_apm_playlist_name' name='ti_apm_playlist_name' value ='$opts[title]' />
+		<p>Player size: <input type='text'  size="3" id='ti_apm_playlist_width' name='ti_apm_playlist_width'  value ='$w' />
+		x <input type='text'  size="3" id='ti_apm_playlist_height' name='ti_apm_playlist_height'  value ='$h' /> pixels</p>
+
+		<p><input type='checkbox' name='ti_apm_autoplay_checkbox' id='ti_apm_autoplay_checkbox' $cb_auto /> Begin playing automatically. </p>
+		<p><input type='checkbox' name='ti_apm_repeat_checkbox' id='ti_apm_repeat_checkbox'  $cb_repeat/> Repeat when playlist ends. </p> 
+		<p><input type='checkbox' name='ti_apm_random_checkbox' id='ti_apm_random_checkbox'  $cb_random/> Create random order playlist. </p>
+		<p>Initial volume (0-100): <input type='text'  size="3" id='ti_apm_playlist_volume' name='ti_apm_playlist_volume'  value ='$opts[volume]' /></p>
+		<p><br></p>
+		<p>Custom XSPF player SWF, if desired:<br/>
+		<input type='text' size='40' id='ti_apm_playlist_skin' name='ti_apm_playlist_skin' value ='$opts[skin]' />
+__END_OF_FORM__
+; 
+	
+	
+}
+
+	
+function ti_apm_admin_booleanValue($val, $defaultValue = false) {
+	if (!isset($val))	{
+		$val = $defaultValue;
+	}
+	$isBoolean = 0;
+	switch ( strtolower($val) )	{
+		case "1":
+		case "true":
+		case "yes":
+		case "ok":
+		case "y":
+		case "on":
+		case "enabled":
+			$isBoolean = 1;
+		break;
+	}
+	return $isBoolean;  
+}
+
 
 function ti_apm_admin_audio_options() {
 
@@ -622,6 +730,25 @@ function ti_apm_print_javascript()	{
 		);
 		
 		
+		// Q: Why not use 'change' instead of 'click' ? A: IE.
+		jQuery("input[name='submissionType']").click(function()	{
+			 
+				// Hide all the submission type form fields...
+				jQuery("input[name='submissionType']").each(function()	{
+					jQuery(".ti_apm_" + jQuery(this).val() + "FileField").hide();
+				});
+				// But show the relevant one
+				jQuery(".ti_apm_" + jQuery("input[@name='submissionType']:checked").val() + "FileField").show();
+				
+			}
+		
+		);
+		
+
+		
+			// Hide the URL field to start
+		jQuery('.ti_apm_externalFileField').hide();
+		
 	});
 
 
@@ -695,6 +822,18 @@ function ti_apm_print_audio_form() {
 
 		$rows = $wpdb->get_results($sql);
 		
+
+		$fileSizeWarning = "<div class='error'><p style='color: #c00;'><em><strong>**Warning:</strong> This server limits the size of data submitted through this page to " . ini_get( 'post_max_size' ) . " (With a maximum file upload size of " . ini_get( 'upload_max_filesize' )  . "). To publish larger files, please add the following settings to your .htaccess or server configuration file:</em></p>
+	<p>
+	<pre style='color: #c00;'>
+	php_value post_max_size 100M (or more if needed)
+	php_value upload_max_filesize 105M (or more if needed)
+	php_value max_execution_time 500 (or longer if needed)
+	</pre>
+	</p></div>
+	";
+	
+		
 		
 		if ($rows) {	
 			foreach ($rows as $row)	{
@@ -747,13 +886,18 @@ function ti_apm_print_audio_form() {
 		</style>
 
 		<h3>Add New Media File</h3>
-
+		
 		<ul>
 			<li><strong>Artist:</strong> <input type='text' name='artist' value='' /></li>
 			<li><strong>Track Name:</strong> <input type='text' name='track' value='' /></li>
 			<li><strong>Album Name:</strong> <input type='text' name='album' value='' /></li>
-			<li><strong>Upload File:</strong><input type='file' name='file' value='' /></li>
-			
+			<!--<li><strong>Upload File:</strong><input type='file' name='file' value='' /></li>-->
+					<li><strong>Now select the media you wish to add.</strong>
+				<ul>
+			<li><input type='radio' name='submissionType' value='upload' checked='checked' />Upload file** <input class='ti_apm_uploadFileField' type='file' name='file' value='' /></li>
+			<li><input type='radio' name='submissionType' value='external' />Use existing URL* <input type='text' class='ti_apm_externalFileField' name='externalURL' id='externalURL' size='50' value='' /></li>
+			</ul></li>
+
 		</ul>
 
 
@@ -762,7 +906,8 @@ function ti_apm_print_audio_form() {
 				<input type='submit' name='submit' class='button-primary' value='Add Media File' />
 
 			</form>
-
+<p><em><strong>*Note:</strong> Remote content must be accessible from this page, and you must have permission to use it.</em></p>
+		<p>$fileSizeWarning</p>
 		</div></div></div>
 
 	";
@@ -924,7 +1069,7 @@ function ti_apm_return_playlist_html ($ti_apm_playlist_id)	{
 
 	if ($tracklist->tracks)	{
 		foreach ($tracks as $track)	{ 
-			$sql = 'select id, post_title as track, guid, post_date, post_modified from ' . $wpdb->posts . ' where id = ' . $track;
+			$sql = 'select id, post_title as track, guid, post_date, post_modified from ' . $wpdb->posts . ' where id = "' . intval($track) .'"';
 	
 			$row = $wpdb->get_row($sql);
 			
@@ -982,23 +1127,50 @@ function ti_apm_upload_files()	{
 	global $_audio_playlist_manager, $wpdb;
 
 	ti_apm_check_permissions(7, 'You do not have permission to upload files.');
-
 		
 	$wpdir = wp_upload_dir();
+	$submissionType = strtolower($_POST['submissionType']);
 	
 	
 	if ($_FILES['file'])	{
 		
 		$uploaded_file = $_FILES['file']['tmp_name'];
 		
-		if (isset ($_FILES['file']['error']) && $_FILES['file']['error'] > 0)	{
+		
+
+		
+		
+		if ($submissionType == 'upload' && isset ($_FILES['file']['error']) && $_FILES['file']['error'] > 0)	{
 			echo '<div id="message" class="error fade"><p>UPLOAD ERROR: ' . ti_apm_file_upload_error_message($_FILES['file']['error']) . ' </p></div>';
 			return;
 		};
 		
 		// Move the file to the correct location within the WP install
-		$newfile = wp_upload_bits( $_FILES['file']['name'], null,  file_get_contents($_FILES["file"]["tmp_name"] ));
-		echo '<div id="message" class="updated fade"><p>File successfully uploaded.</p></div>';
+		if ($submissionType == 'upload' && isset($_FILES['file']['name']) && $_FILES['file']['name'] > '' )	{
+		
+			$newfile = wp_upload_bits( $_FILES['file']['name'], null,  file_get_contents($_FILES["file"]["tmp_name"] ));
+			
+		}	else {
+
+			if ($submissionType == 'external')	{
+					$info = get_headers(esc_url($_POST['externalURL']), 1);
+					echo '<div id="message" class="updated fade"><p>URL entered. Please ensure <a target="_blank" href="' . esc_url($_POST['externalURL']) .'">'. esc_url($_POST['externalURL'])  . '</a> is the correct URL for your external media.</p><p>The remote server says the current mime type of this file is ' . $info['Content-Type'] .'. Please note that if this is not correct, the URL may not appear within the available items nor function correctly within the Audio Player.</p><p>Also, please note that remote files may only be used if the remote server includes this server within its crossdomain.xml file.</div>';
+					
+						
+					$newfile = array ( 'url' => esc_url($_POST['externalURL']) , 'file' => array('name' =>esc_url($_POST['externalURL']), type => $info['Content-Type'], basedir=>esc_url($_POST['externalURL']), baseurl=>esc_url($_POST['externalURL']))  );
+					
+					
+					// Otherwise, let's note the error
+			}
+		}
+		
+		if ($newfile->error)	{
+
+			echo '<div id="message" class="error fade"><p>ERROR! Unable to create new file.</p></div>';
+			
+		}	else {
+			echo '<div id="message" class="updated fade"><p>Media successfully added to collection.</p></div>';
+		}
 		
 	}
 	
@@ -1007,7 +1179,7 @@ function ti_apm_upload_files()	{
 		'post_title' => $wpdb->escape($_POST['track']) ? $wpdb->escape($_POST['track']) : 'Unknown', 
 		'post_name' => $wpdb->escape($_POST['track']) ? $wpdb->escape($_POST['track']) : 'Unknown',
 		'post_type' => 'attachment',
-		'post_mime_type' => $wpdb->escape($_FILES["file"]['type']),
+		'post_mime_type' => $wpdb->escape($_FILES['file']['type']) ? $wpdb->escape($_FILES['file']['type']) : $wpdb->escape($info ? $info['Content-Type'] : 'unknown'),
 		'post_author' => $user_ID,
 		'ping_status' => get_option('default_ping_status'),
 		'post_parent' => 0,
@@ -1020,20 +1192,36 @@ function ti_apm_upload_files()	{
 	$pID = wp_insert_post($post);
 	
 
-	// Add the metadata so it shows up as the correct mime type within media basket
+/*
+ 
+ 
+	if ($submissionType == 'upload')	{
+		$attach_id = wp_insert_attachment( $attachment, $newfile['file'] );
+		$attach_data = wp_generate_attachment_metadata( $attach_id, $newfile['file']  );
+		$combined_metadata = array_merge($attach_data, $ti_metadata);
+	}	else {
+		$attach_id = wp_insert_post( $attachment );
+		$combined_metadata = $ti_metadata;
+	}
 	
-   update_post_meta(  $pID, '_wp_attached_file',$wpdb->escape($_FILES['file']['name'] ) ) or add_post_meta( $pID, '_wp_attached_file',$wpdb->escape($_FILES["file"]['name'] ));
+	*/
 
+
+	// Add the metadata so it shows up as the correct mime type within media basket
+		if ($submissionType == 'upload')	{	
+		   update_post_meta(  $pID, '_wp_attached_file',$wpdb->escape($_FILES['file']['name'] ) ) or add_post_meta( $pID, '_wp_attached_file',$wpdb->escape($_FILES["file"]['name'] ));
+		}
 	
-	$metadata =  array (
-		'_ti_apm_album' => $wpdb->escape($_POST['album']) ? $wpdb->escape($_POST['album'] ) : 'Unknown',
-		'_ti_apm_artist' => $wpdb->escape($_POST['artist'])? $wpdb->escape($_POST['artist'] ) : 'Unknown'
 		
-	);
-	
-		  
-	update_post_meta(  $pID, '_wp_attachment_metadata',$metadata) or add_post_meta( $pID, '_wp_attachment_metadata', $metadata);
-		  
+		$metadata =  array (
+			'_ti_apm_album' => $wpdb->escape($_POST['album']) ? $wpdb->escape($_POST['album'] ) : 'Unknown',
+			'_ti_apm_artist' => $wpdb->escape($_POST['artist'])? $wpdb->escape($_POST['artist'] ) : 'Unknown'
+			
+		);
+		
+			  
+		update_post_meta(  $pID, '_wp_attachment_metadata',$metadata) or add_post_meta( $pID, '_wp_attachment_metadata', $metadata);
+
 
 
 }
@@ -1060,7 +1248,9 @@ function ti_apm_print_player ($atts)	{
 		"title"	=> "Playlist managed by Tierra Audio Playlist Manager"
 		
     ), $atts));
-		
+	
+	// Width must be at least 120...	
+	$width = ($width < 120) ? 120 : $width;
 	
 	// IF WE'VE BEEN PROVIDED A PLAYLIST NAME, LET'S USE THIS TO GLEAN THE CORRECT PLAYLIST ID
 	if ($name != "")	{
@@ -1093,7 +1283,7 @@ function ti_apm_print_player ($atts)	{
 	
 	
 	$response=<<<__END_PLAYER_CODE__
-	<script language="javascript">
+	<p class='ti_player_align_class'><script language="javascript">
 	
 	AC_FL_RunContent(
 		'codebase', 'http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0',
@@ -1118,7 +1308,7 @@ function ti_apm_print_player ($atts)	{
 		'movie', '$player',
 		'salign', ''
 	); //end AC code	
-	</script>
+	</script></p>
 	
 		
 		<noscript>
