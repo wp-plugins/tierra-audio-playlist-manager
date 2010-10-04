@@ -3,7 +3,7 @@
  * Plugin Name: Tierra Audio Playlist Manager
  * Plugin URI: http://tierra-innovation.com/wordpress-cms/2009/10/16/audio-playlist-manager/
  * Description: Create, manage and embed MP3 playlists within the WordPress admin panel. Playlists can be embedded using the included swf player or played via third-party <a target="_blank" href="http://xspf.xiph.org/applications/">XSPF-compatible music players</a>.
- * Version: 2.0
+ * Version: 2.1
  * Author: Tierra Innovation
  * Author URI: http://www.tierra-innovation.com/
  */
@@ -24,6 +24,7 @@
 /*
 
 Changes:
+ 2.1 	- Fixed RSS 'array' bug introduced with WP 3.0
  2.0 	- Added widget support
 		- Fixed loading bug upon activation in WP 3.0.1
 		- Fixed plugin to work correctly in WP 3.0.1
@@ -83,7 +84,7 @@ $ti_apm_prev_width = 500;
 
 
 // module globals
-$_audio_playlist_manager_db_version = 2.0;
+$_audio_playlist_manager_db_version = 2.1;
 
 // these need to be declared global so they are in scope for the activation hook
 global  $wpdb, $_audio_playlist_manager_db_version, $_audio_playlist_manager, $ti_apm_base_query, $userdata,  $ti_apm_prev_width, $ti_apm_prev_height;
@@ -239,7 +240,7 @@ function ti_apm_modify_audio_menu() {
 add_shortcode('ti_audio', 'ti_apm_print_player');
 add_action('admin_menu', 'ti_apm_modify_audio_menu');
 
-add_action('the_excerpt_rss', array(&$this, 'ti_apm_remove_shortcode_from_rss'));
+add_action('the_excerpt_rss', 'ti_apm_remove_shortcode_from_rss');
 add_action('the_content_rss', 'ti_apm_remove_shortcode_from_rss');
 
 
@@ -1308,17 +1309,17 @@ function ti_apm_print_player ($atts)	{
 		'movie', '$player',
 		'salign', ''
 	); //end AC code	
-	</script></p>
+	</script>
 	
 		
-		<noscript>
-				<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0" width="$width" height="$height" id="player_$ti_apm_playlist_id" align="middle">
-				<param name="allowScriptAccess" value="always" />
-				<param name="allowFullScreen" value="true" />
-				<param name="movie" value="$playerURL?$flashvars" /><param name="quality" value="high" /><param name="bgcolor" value="#ffffff" />
-				<embed src="$playerURL?$flashvars" quality="high" bgcolor="#ffffff" width="$width" height="$height" name="player_$ti_apm_playlist_id" align="middle" allowScriptAccess="always" allowFullScreen="true" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
-				</object>
-			</noscript>
+	<noscript>
+		<object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=7,0,0,0" width="$width" height="$height" id="player_$ti_apm_playlist_id" align="middle">
+		<param name="allowScriptAccess" value="always" />
+		<param name="allowFullScreen" value="true" />
+		<param name="movie" value="$playerURL?$flashvars" /><param name="quality" value="high" /><param name="bgcolor" value="#ffffff" />
+		<embed src="$playerURL?$flashvars" quality="high" bgcolor="#ffffff" width="$width" height="$height" name="player_$ti_apm_playlist_id" align="middle" allowScriptAccess="always" allowFullScreen="true" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer" />
+		</object>
+	</noscript></p>
 
 
 __END_PLAYER_CODE__
@@ -1331,6 +1332,22 @@ return $response;
 
 function ti_apm_remove_shortcode_from_rss($content) {
 	return preg_replace("/\[TI_([^\]]*)\]/i", "", $content);
+}
+
+function ti_apm_remove_shortcode_from_rss_excerpt($excerpt) {
+	return preg_replace("/\[TI_([^\]]*)\]/i", "", $excerpt);
+}
+
+
+add_action('the_content_rss', array(&$this, 'ti_apm_remove_scriptcode_from_content_rss'));
+add_action('the_excerpt_rss', array(&$this, 'ti_apm_remove_scriptcode_from_excerpt_rss'));
+
+function ti_apm_remove_scriptcode_from_content_rss($content) {
+	return preg_replace("|<p class='ti_player_align_class'>(.*)</p>|", "", $content);
+}
+
+function ti_apm_remove_scriptcode_from_excerpt_rss($excerpt) {
+	return preg_replace("|<p class='ti_player_align_class'>(.*)</p>|", "", $excerpt);
 }
 
 function ti_apm_file_upload_error_message($error_code) {

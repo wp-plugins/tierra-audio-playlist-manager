@@ -20,6 +20,10 @@ We provide customizable short code that can be pasted into any page / post, as w
 
 == Changelog ==
 
+= 2.1 = 
+
+Fixed RSS 'array' bug introduced with WP 3.0
+
 = 2.0 = 
 
 Added widget support
