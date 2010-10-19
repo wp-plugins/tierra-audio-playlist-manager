@@ -20,6 +20,11 @@ We provide customizable short code that can be pasted into any page / post, as w
 
 == Changelog ==
 
+= 2.2 = 
+
+Fixed widget randomize bug
+Fixed syntax error on certain browsers with output
+
 = 2.1 = 
 
 Fixed RSS 'array' bug introduced with WP 3.0
